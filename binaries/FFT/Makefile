@@ -10,7 +10,7 @@ COMMON_CXXFLAGS = -ggdb3 -std=c++17 -static
 COMMON_LDFLAGS  =  -fopenmp
 
 # Native: optimize for whatever CPU this machine has
-NATIVE_CXXFLAGS = $(COMMON_CXXFLAGS) -march=native -mtune=native
+NATIVE_CXXFLAGS = $(COMMON_CXXFLAGS) -march=native -mtune=native -DON_HARDWARE
 NATIVE_LDFLAGS = $(COMMON_LDFLAGS) -lfftw3_omp -lfftw3
 
 # x86-64 cross/native-ish target

@@ -2,14 +2,45 @@
 #include <stdlib.h>
 #include <string>
 
+#ifdef ON_HARDWARE
+#include <cstdio>
+#include <time.h>
+
+/* converts timespec struct to ns timestamp */
+static uint64_t to_ns(struct timespec ts) { return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec; }
+
+// Reason I am using this over something line std::chrono is more so for consistency
+uint64_t bench_now_ns(void) {
+    #ifndef _WIN32
+        struct timespec ts;
+    #ifdef CLOCK_MONOTONIC_RAW
+        clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+    #else
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+    #endif
+        return to_ns(ts);
+    #else
+        LARGE_INTEGER fq, cn;
+        QueryPerformanceFrequency(&fq);
+        QueryPerformanceCounter(&cn);
+        return (uint64_t)((__int128)cn.QuadPart * 1000000000ull / fq.QuadPart);
+    #endif
+}
+
+#endif
+
 #define N_THREAD_DEFAULT 1
-#define N_DEFAULT 1024
+#define N_DEFAULT 512
 #define ITERS_DEFAULT 10
 
 
 
 int main(int argc, char**argv) {
     
+#ifdef ON_HARDWARE
+    uint64_t start_ns = bench_now_ns();
+#endif
+
     size_t n_threads = N_THREAD_DEFAULT;
     size_t N = N_DEFAULT;
     size_t iterations = ITERS_DEFAULT;
@@ -48,5 +79,11 @@ int main(int argc, char**argv) {
 
     for (size_t i = 0; i < iterations ; i++)
         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, N, N, N, 1, A, N, B, N, 0, C, N);
+
+#ifdef ON_HARDWARE
+    uint64_t end_ns = bench_now_ns();
+    uint64_t delta = end_ns - start_ns;
+    printf("Elapsed Time: %0.5f seconds\n", delta * 1e-9);
+#endif
 
 }
