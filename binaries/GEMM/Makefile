@@ -21,7 +21,7 @@ X86_LDFLAGS = $(COMMON_LDFLAGS) -lopenblas_cooperlakep-r0.3.33.dev
 
 # Raspberry Pi 5: Cortex-A76, ARMv8.2-A
 # The Cortex-A76 supports NEON/ASIMD as part of AArch64.
-ARM_CXXFLAGS = $(COMMON_CXXFLAGS) -mcpu=cortex-a76
+ARM_CXXFLAGS = $(COMMON_CXXFLAGS) -mcpu=cortex-a76 -mtune=cortex-a76 -mbranch-protection=none
 ARM_LDFLAGS = $(COMMON_LDFLAGS) -lopenblas_cortexa76p-r0.3.33.dev
 
 # ---------- Targets ----------
