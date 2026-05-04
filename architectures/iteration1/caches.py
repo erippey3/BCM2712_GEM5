@@ -7,9 +7,9 @@ from m5.objects import Cache
 class L1ICache(Cache):
     size = "64KiB"
     assoc = 4
-    tag_latency = 4
-    data_latency = 4
-    response_latency = 4
+    tag_latency = 1
+    data_latency = 1
+    response_latency = 1
     mshrs = 4
     tgts_per_mshr = 20
 
@@ -23,9 +23,9 @@ class L1ICache(Cache):
 class L1DCache(Cache):
     size = "64KiB"
     assoc = 4
-    tag_latency = 4
-    data_latency = 4
-    response_latency = 4
+    tag_latency = 1
+    data_latency = 1
+    response_latency = 1
     mshrs = 8
     tgts_per_mshr = 20
 
@@ -42,7 +42,7 @@ class L2Cache(Cache):
     tag_latency = 12
     data_latency = 12
     response_latency = 12
-    mshrs = 20
+    mshrs = 32
     tgts_per_mshr = 12
 
     def connectCPUSideBus(self, bus):
