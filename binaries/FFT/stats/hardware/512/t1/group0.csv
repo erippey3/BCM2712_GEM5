@@ -1,0 +1,11 @@
+# started on Mon May  4 05:59:58 2026
+
+0.51,msec,task-clock:u,2.51%,480686,100.00,0.571,CPUs utilized
+939789,ns,duration_time,4.06%,854698,100.00,,
+965960,ns,user_time,1.65%,925800,100.00,,
+740375,,cycles:u,1.92%,480686,100.00,1.466,GHz
+1296400,,instructions:u,0.00%,480686,100.00,1.75,insn per cycle
+1296400,,inst_retired:u,0.00%,480686,100.00,2.567,G/sec
+1387765,,inst_spec:u,0.21%,480686,100.00,2.748,G/sec
+205426,,stall_frontend:u,6.02%,480686,100.00,406.730,M/sec
+118296,,stall_backend:u,3.18%,480686,100.00,234.218,M/sec

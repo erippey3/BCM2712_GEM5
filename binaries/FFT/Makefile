@@ -22,7 +22,7 @@ X86_LDFLAGS = $(COMMON_LDFLAGS) -lfftw3_omp.X86 -lfftw3.X86
 # Raspberry Pi 5: Cortex-A76, ARMv8.2-A
 # The Cortex-A76 supports NEON/ASIMD as part of AArch64.
 ARM_CXXFLAGS = $(COMMON_CXXFLAGS) -mcpu=cortex-a76 -mtune=cortex-a76 -mbranch-protection=none
-ARM_LDFLAGS = $(COMMON_LDFLAGS) -lfftw3_omp.arm -lfftw3.arm
+ARM_LDFLAGS = $(COMMON_LDFLAGS) -lfftw3_omp.arm -lfftw3.arm -DON_HARDWARE
 
 # ---------- Targets ----------
 
