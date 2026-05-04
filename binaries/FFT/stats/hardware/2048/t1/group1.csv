@@ -1,0 +1,12 @@
+# started on Mon May  4 06:00:00 2026
+
+0.68,msec,task-clock:u,2.55%,639111,100.00,0.612,CPUs utilized
+1157099,ns,duration_time,4.03%,1253750,100.00,,
+579873,ns,user_time,26.49%,836200,100.00,,
+548456,ns,system_time,31.77%,240200,100.00,,
+233315,,branches:u,0.00%,639111,100.00,344.712,M/sec
+2656,,branch-misses:u,3.81%,639111,100.00,1.14,of all branches
+238269,,br_pred:u,0.04%,639111,100.00,352.031,M/sec
+2656,,br_mis_pred:u,3.81%,639111,100.00,3.924,M/sec
+233315,,br_retired:u,0.00%,639111,100.00,344.712,M/sec
+2468,,br_mis_pred_retired:u,3.82%,639111,100.00,3.646,M/sec
