@@ -1,3 +1,10 @@
 
 **/m5out/
 **/__pycache__
+**/.vscode
+
+
+# files specific to this project
+**/gem5_failed_runs*
+**/nohup.out
+**/stats/
