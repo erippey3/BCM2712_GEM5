@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <omp.h>
 #include <suitesparse/GraphBLAS.h>
 
 #ifdef ON_HARDWARE
@@ -39,7 +38,7 @@ uint64_t bench_now_ns(void) {
 #define DEGREE_DEFAULT 8
 #define ITERS_DEFAULT 1
 #define SOURCE_DEFAULT 0
-#define SEED_DEFAULT 0xC0FFEEULL
+#define SEED_DEFAULT 0xDEADBEEFULL
 
 
 static uint64_t parse_seed(const char* str)
@@ -60,6 +59,10 @@ static uint64_t parse_seed(const char* str)
 
 
 static GrB_Info build_graph(GrB_Matrix *A, GrB_Index N, GrB_Index degree, uint64_t seed_val) {
+    if (A == nullptr) return GrB_NULL_POINTER;
+    if (N == 0 || degree == 0) return GrB_INVALID_VALUE;
+    if (degree > ((GrB_Index)-1) / N) return GrB_OUT_OF_MEMORY;
+
     GrB_Info info = GrB_Matrix_new(A, GrB_BOOL, N, N);
     if (info != GrB_SUCCESS) return info;
 
@@ -67,17 +70,22 @@ static GrB_Info build_graph(GrB_Matrix *A, GrB_Index N, GrB_Index degree, uint64
 
     std::vector<GrB_Index> rows(nedges);
     std::vector<GrB_Index> cols(nedges);
-    std::vector<bool> vals_vec(nedges, true);
 
     bool *vals = static_cast<bool*>(std::malloc(nedges * sizeof(bool)));
     if (!vals) return GrB_OUT_OF_MEMORY;
 
-    uint64_t seed = seed_val;
+    uint64_t rng = seed_val;
+
+    auto next_rand = [&rng]() -> uint64_t {
+        rng = rng * 2862933555777941757ULL + 3037000493ULL;
+        return rng;
+    };
+
     
     for(GrB_Index i = 0; i < N; i++) {
         for (GrB_Index d = 0; d < degree; d++) {
             GrB_Index e = i * degree + d;
-            GrB_Index j = static_cast<GrB_Index>(rand() % N);
+            GrB_Index j = static_cast<GrB_Index>(next_rand() % N);
 
             if (j == i) {
                 j = (j + 1) % N;
@@ -213,11 +221,26 @@ int main(int argc, char**argv) {
     }
 
     srand(static_cast<unsigned int>(seed));
-    omp_set_num_threads(static_cast<int>(n_threads));
+
+
 
     GrB_Info info = GrB_init(GrB_BLOCKING);
     if (info != GrB_SUCCESS) return 1;
 
+#if defined(GxB_GLOBAL_NTHREADS)
+    info = GrB_Global_set_INT32(
+        GrB_GLOBAL,
+        static_cast<int32_t>(n_threads),
+        GxB_GLOBAL_NTHREADS
+    );
+#else
+    info = GrB_Global_set_INT32(
+        GrB_GLOBAL,
+        static_cast<int32_t>(n_threads),
+        GxB_NTHREADS
+    );
+#endif
+    if (info != GrB_SUCCESS) return 1;
 
     GrB_Matrix A = nullptr;
     GrB_Vector levels = nullptr;
