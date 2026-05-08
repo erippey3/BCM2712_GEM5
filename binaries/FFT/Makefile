@@ -28,7 +28,7 @@ ARM_LDFLAGS = $(COMMON_LDFLAGS) -lfftw3_omp.arm -lfftw3.arm -DON_HARDWARE
 
 .PHONY: all native x86 arm clean
 
-all: native
+all: arm
 
 native: fft-native
 

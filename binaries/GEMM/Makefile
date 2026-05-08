@@ -28,7 +28,7 @@ ARM_LDFLAGS = $(COMMON_LDFLAGS) -lopenblas_cortexa76p-r0.3.33.dev -DON_HARDWARE
 
 .PHONY: all native x86 arm clean
 
-all: native
+all: arm
 
 native: gemm-native
 

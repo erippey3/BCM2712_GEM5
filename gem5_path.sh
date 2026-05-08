@@ -1,0 +1,1 @@
+GEM5_PATH="/opt/gem5/build/ALL/gem5.opt"
