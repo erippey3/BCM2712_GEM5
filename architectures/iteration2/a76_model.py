@@ -4,19 +4,23 @@ def configure_a76_o3(cpu):
     # Cortex-A76-ish front end / back end.
     # These are modeling choices, not a perfect BCM2712 description.
 
+    # https://developer.arm.com/community/arm-community-blogs/b/architectures-and-processors-blog/posts/cortex-a76-laptop-class-performance-with-mobile-efficiency
+    # for wide decode, quad issue integer units
     cpu.fetchWidth = 4
-    cpu.decodeWidth = 4
+    cpu.decodeWidth = 4 
     cpu.renameWidth = 4
     cpu.dispatchWidth = 4
     cpu.issueWidth = 8
     cpu.wbWidth = 8
     cpu.commitWidth = 4
 
+    # https://www.androidauthority.com/cortex-a76-deep-dive-870896/
+    # 128 entry instruction window
     cpu.numROBEntries = 128
 
-    #cpu.numIQEntries = 64
+    # two simd units. no where to put
 
-    # Roughly A76-shaped load/store pressure.
+    # 72 in flight stores and 68 in flight loads
     cpu.LQEntries = 68
     cpu.SQEntries = 72
 
