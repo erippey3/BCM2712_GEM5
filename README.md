@@ -1,3 +1,7 @@
+# BCM2712 GEM5
+This repository aims to simulate the BCM2712 SoC. In particular, the CPU, and surrounding memory hierarchy. The goal is to be able to achieve comparable performance results to a physical BCM2712 found in Raspberry Pi 5 and Raspberry Pi Compute Module 5 devices.
+
+## Requirements 
 In order to run any of this code, you will need a built version of gem5 that 
 contains ARM.
 
