@@ -6,9 +6,13 @@ from a76_interconnect import A76L2XBar, A76L3Xbar
 class A76L1ICache(Cache):
     size = "64KiB" # directly from TRM
     assoc = 4 # directly from TRM
-    tag_latency = 1
-    data_latency = 1
-    response_latency = 1
+
+    # ARM Cortex-A Series Programming Manual Page 111
+    tag_latency = 4
+    data_latency = 4
+    # https://www.androidauthority.com/cortex-a76-deep-dive-870896/
+    response_latency = 4
+
     mshrs = 4
     tgts_per_mshr = 20
     replacement_policy = TreePLRURP() # Cortex A76 uses Pseudo-LRU replacement Policy
@@ -23,18 +27,20 @@ class A76L1ICache(Cache):
 class A76L1DCache(Cache):
     size = "64KiB" # directly from TRM
     assoc = 4 # directly from TRM
-    tag_latency = 1
-    data_latency = 1
-    response_latency = 1
+    tag_latency = 4
+    data_latency = 4
+    # https://www.androidauthority.com/cortex-a76-deep-dive-870896/
+    response_latency = 4
     mshrs = 8
     tgts_per_mshr = 20
     replacement_policy = TreePLRURP() # Cortex A76 uses Pseudo-LRU replacement Policy
 
+    # FetchBench: Systematic Identification and Characterization of Proprietary Prefetchers
     prefetcher = StridePrefetcher(
         degree = 2,
         distance=1,
         table_entries="64",
-        table_assoc=4,
+        table_assoc=4, # Commonly 2 or 4 ways (ARM Cortex-A Series Programming Manual 114)
 
         # A76 load-side prefetcher uses virtual addresses.
         use_virtual_addresses=True,
@@ -55,17 +61,19 @@ class A76L1DCache(Cache):
     def connectBus(self, bus):
         self.mem_side = bus.cpu_side_ports
 
-
+# unified L2
 class A76L2Cache(Cache):
     size = "512KiB" # direct from TRM
     assoc = 8 # direct from TRM
-    tag_latency = 12
-    data_latency = 12
-    response_latency = 12
+    tag_latency = 9
+    data_latency = 9
+    # https://www.androidauthority.com/cortex-a76-deep-dive-870896/
+    response_latency = 9
     mshrs = 32
     tgts_per_mshr = 12
     replacement_policy = WeightedLRURP() # A76 uses Dynamic Biased RP which biases replacing clean blocks. This is not an option in GEM5
 
+    # FetchBench: Systematic Identification and Characterization of Proprietary Prefetchers
     prefetcher = StridePrefetcher(
         degree=2,
         distance=1,
@@ -76,7 +84,6 @@ class A76L2Cache(Cache):
         on_inst=False,
         on_data=True,
 
-        # If you want this to approximate the store-side engine:
         on_read=False,
         on_write=True,
 
@@ -93,9 +100,10 @@ class A76L2Cache(Cache):
 class A76L3Cache(Cache):
     size = '2MiB'
     assoc = 16
-    tag_latency = 30
-    data_latency = 30
-    response_latency = 30
+    tag_latency = 31
+    data_latency = 31
+    # https://www.androidauthority.com/cortex-a76-deep-dive-870896/
+    response_latency = 31
     mshrs = 32
     tgts_per_mshr = 20
 
