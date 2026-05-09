@@ -9,10 +9,10 @@ def configure_a76_o3(cpu):
     cpu.fetchWidth = 4
     cpu.decodeWidth = 4 
     cpu.renameWidth = 4
-    cpu.dispatchWidth = 4
+    cpu.dispatchWidth = 8
     cpu.issueWidth = 8
     cpu.wbWidth = 8
-    cpu.commitWidth = 4
+    cpu.commitWidth = 8
 
     # https://www.androidauthority.com/cortex-a76-deep-dive-870896/
     # 128 entry instruction window

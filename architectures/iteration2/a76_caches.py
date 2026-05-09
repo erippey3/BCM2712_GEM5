@@ -65,11 +65,11 @@ class A76L1DCache(Cache):
 class A76L2Cache(Cache):
     size = "512KiB" # direct from TRM
     assoc = 8 # direct from TRM
+    # https://www.androidauthority.com/cortex-a76-deep-dive-870896/
     tag_latency = 9
     data_latency = 9
-    # https://www.androidauthority.com/cortex-a76-deep-dive-870896/
     response_latency = 9
-    mshrs = 32
+    mshrs = 46 # https://hothardware.com/reviews/arm-unleashes-new-cpu-gpu-and-vpu-designs
     tgts_per_mshr = 12
     replacement_policy = WeightedLRURP() # A76 uses Dynamic Biased RP which biases replacing clean blocks. This is not an option in GEM5
 
@@ -104,7 +104,7 @@ class A76L3Cache(Cache):
     data_latency = 31
     # https://www.androidauthority.com/cortex-a76-deep-dive-870896/
     response_latency = 31
-    mshrs = 32
+    mshrs = 94 # https://hothardware.com/reviews/arm-unleashes-new-cpu-gpu-and-vpu-designs
     tgts_per_mshr = 20
 
     def __init__(self, opts=None):
