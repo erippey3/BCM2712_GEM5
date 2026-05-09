@@ -147,6 +147,7 @@ def natural_key(value: object):
 
 def coerce_numeric_if_possible(series: pd.Series) -> pd.Series:
     converted = pd.to_numeric(series, errors="coerce")
+    # Use numeric only if every non-null value converted successfully.
     if converted.notna().sum() == series.notna().sum():
         return converted
     return series
@@ -329,7 +330,7 @@ def plot_lines(df: pd.DataFrame, args: argparse.Namespace) -> Path:
                 )
         ax.legend(title=series_col)
 
-
+    # If x was not fully numeric, force ticks to the available values.
     if not pd.api.types.is_numeric_dtype(grouped[x_col]):
         values = sorted(grouped[x_col].dropna().unique(), key=natural_key)
         ax.set_xticks(range(len(values)))
