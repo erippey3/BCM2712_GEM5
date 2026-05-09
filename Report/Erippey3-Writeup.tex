@@ -14,22 +14,21 @@
 
 \begin{document}
 
-\title{Arm Cortex-A76 Validation Study Via GEM5}
-
+\title{Arm Cortex-A76 Validation Study via gem5}
 
 \author{Eric Rippey}
 \email{erippey3@vt.edu}
 
 
 \begin{abstract}
-This paper investigates the use of gem5 to approximate and validate the CPU 
-behavior of the Broadcom BCM2712, the system on chip used in the Raspberry Pi 5 
-family, The BCM2717 contains a quad-core Arm Coretex-A76, a class of processor 
-widely used in modern embedded systems. In this work, a gem5 simulation of the 
-BCM2712 will be constructed to emulate key aspects of the processor and will be 
-tested on multiple workloads. This study will then compare results obtainable on 
-both on both the simulated device, and a physical Raspberry Pi 5 to find where 
-the simulation matches actual behavior, and where it diverges.
+This paper investigates the use of gem5 to approximate and validate the CPU
+behavior of the Broadcom BCM2712, the system-on-chip used in the Raspberry Pi 5
+family. The BCM2712 contains a quad-core Arm Cortex-A76 processor, a class of
+processor widely used in modern embedded systems. In this work, a gem5 simulation
+of the BCM2712 is constructed to emulate key aspects of the processor and is
+evaluated on multiple workloads. The study compares results from both the
+simulated system and a physical Raspberry Pi 5 to identify where the simulation
+matches hardware behavior and where it diverges.
 \end{abstract}
 
 
@@ -40,185 +39,175 @@ the simulation matches actual behavior, and where it diverges.
 \maketitle
 
 \section{Introduction}
-Modern embedded and edge systems rely increasingly on processors that balance 
-performance, power efficiency, and cost. Among these, the Arm Cortex-A76 has 
-seen adoption in various embedded system-on-chips from vendors such as Broadcom, 
-Qualcomm, Rockchip, and Samsung. A commonly accessible example is the Broadcom 
-BCM2712 used in the Raspberry Pi 5 and Raspberry Pi 5 Compute Module. Because 
-platforms in this class operate under tight power and thermal constraints, 
-understanding their performance characteristics is important for both system 
-designers and application developers.
+Modern embedded and edge systems increasingly rely on processors that balance
+performance, power efficiency, and cost. Among these processors, the Arm
+Cortex-A76 has seen adoption in embedded system-on-chips from vendors such as
+Broadcom, Qualcomm, Rockchip, and Samsung. A commonly accessible example is the
+Broadcom BCM2712 used in the Raspberry Pi 5 and Raspberry Pi 5 Compute Module.
+Because platforms in this class operate under tight power and thermal
+constraints, understanding their performance characteristics is important for
+both system designers and application developers.
 
-On physical hardware, tools such as \texttt{perf} and vendor specific profiles 
-such as the Arm Streamline Performance Analyzer can expose detailed performance 
-behavior through hardware counters. This tends to be more convenient. However, 
-hardware have fixed designs and are prone to inconsistent testing noise. 
-Simulation provides a controlled repeatable environment with room to alter the 
-hardware for theoretical situation. Architectural simulators such as gem5 are 
-therefore attractive because they provide access to internal statistics and 
-enable experiments that would not be possible of fixed hardware. Their 
-usefulness depends on their faithfulness of the replication of the real system 
-behavior. 
+On physical hardware, tools such as \texttt{perf} and vendor-specific profilers
+such as Arm Streamline Performance Analyzer can expose detailed performance
+behavior through hardware counters. These tools are convenient, but physical
+hardware has a fixed design and is subject to experimental noise. Simulation
+provides a controlled and repeatable environment in which hardware parameters can
+be modified for theoretical studies. Architectural simulators such as gem5 are
+therefore attractive because they provide access to internal statistics and
+enable experiments that would not be possible on fixed hardware. However, their
+usefulness depends on how faithfully they reproduce real system behavior.
 
-The desire to faithfully replicate the BCM2712 is the central motivation of this 
-study. We and to understand the extent to which gem5 can approximate the 
-behavior of the BCM2712's Cortex-A76 CPU subsystem by comparing it to a physical 
-Raspberry Pi 5. We indent to evaluate whether a gem5 model can reproduce enough 
-of the behavior of the target platform to support meaningful architecture
-experiments. Thus, this study falls under the line of a validation experiment.
-Ultimately, if the simulated BCM2712 is able to track hardware metrics well 
-enough, it becomes a credible tool for future exploratory studies. If it does 
-not, we hope to gleam the potential limitations of simulating the BCM2712.
+The desire to faithfully approximate the BCM2712 is the central motivation of
+this study. We aim to understand the extent to which gem5 can model the behavior
+of the BCM2712's Cortex-A76 CPU subsystem by comparing it to a physical
+Raspberry Pi 5. We evaluate whether a gem5 model can reproduce enough of the
+target platform's behavior to support meaningful architecture experiments. Thus,
+this work is a validation study. If the simulated BCM2712 tracks hardware metrics
+closely enough, it can become a credible tool for future exploratory studies. If
+it does not, the differences can help identify the limitations of simulating this
+platform.
 
 \section{Background}
-The gem5 simulator was first released in 2011 and was designed to merge the best 
-aspects of the M5 and GEMS simulators\cite{Binkert2011-oh}. Those included, 
-being highly configurable, beging able to support multiple instruction sets, 
-including (ARM, ALPHA, MIPS, Power, SPRC, and X86), having flexible memory 
-systems, and supporting multiple memory interconnect models. The gem 5 simulator 
-supports four different CPU models. It provides a \texttt{AtomicSimple}, which 
-is single instruction per cycle, \texttt{TimingSimple} which is single 
-instruction per cycle but simulates memory reference time, \texttt{InOrder} 
-which is a pipelined, in order, execution model, and \texttt{O3} which is a 
-pipelined out of order execution model. When running applications in gem5, they 
-can be done either in \texttt{system-call emulation} mode, which avoids the need 
-for an operating system, or using \texttt{full-system} mode, which executes user 
-and kernel level instructions. The gem5 platform also includes two memory 
-systems: the \texttt{Clasic} model which is fast and easy, and the \texttt{Ruby} 
-model which provides flexible conformability for different cache coherency 
-strategies.
+The gem5 simulator was first released in 2011 and was designed to merge the best
+aspects of the M5 and GEMS simulators\cite{Binkert2011-oh}. These strengths
+included high configurability, support for multiple instruction set
+architectures, flexible memory systems, and multiple memory interconnect models.
+The gem5 simulator supports several CPU models. It provides \texttt{AtomicSimple},
+a single-instruction-per-cycle model; \texttt{TimingSimple}, a
+single-instruction-per-cycle model that simulates memory reference timing;
+\texttt{InOrder}, a pipelined in-order execution model; and \texttt{O3}, a
+pipelined out-of-order execution model. Applications in gem5 can be run in either
+\texttt{system-call emulation} mode, which avoids the need for an operating
+system, or \texttt{full-system} mode, which executes both user and kernel-level
+instructions. The gem5 platform also includes two memory systems: the
+\texttt{Classic} model, which is fast and straightforward to configure, and the
+\texttt{Ruby} model, which provides flexible configurability for different cache
+coherence strategies.
 
-Arm itself released a research starter kit for modeling Arm architecture using 
-gem5\cite{githubGitHubArmeducationarmgem5rsk}. The Arm kit includes guided 
-documentation and a GitHub repository. In addition to defining many of the CPU 
-and memory options provided by the gem5 simulator, the starter kit provides a 
-High-Performance In-Order CPU with timings tuned to represent a modern in-order 
-Armv8-A implementation. This happens to be the type of CPU that the BCM2712 has, 
-with the Arm Cortex-A76. The High-Performance In-Order CPU contains 4 stages, 2 
-fetch stages, a decode stage, and an execute stage. For each stage parameter 
-specifications are provided to fine tune the behavior of the pipeline to resembe 
-an Armv8-A implementation. The same is done for branch prediction, specialized 
-function units, level 1 instruction and data cache, the TLB, and L2 cache. It 
-does not provide specifications for L3 cache, which the Arm Cortex-A76 has, 
-likely because it is optional for the Armv8-A CPU\cite{armCompare}. This work is 
-limited to implementing a generic Armv8-A In-Order architecture. We contribute 
-an implemented out-of-order ArmV8-A execution to be more faithful to the 
-Cortex-A76\cite{armCortexA76Product} and provide validation results.
+Arm released a research starter kit for modeling Arm architectures using
+gem5\cite{githubGitHubArmeducationarmgem5rsk}. The Arm kit includes guided
+documentation and a GitHub repository. In addition to defining many CPU and
+memory options provided by gem5, the starter kit provides a High-Performance
+In-Order CPU with timings tuned to represent a modern in-order Armv8-A
+implementation. This differs from the BCM2712's Cortex-A76, which is an
+out-of-order core. The High-Performance In-Order CPU contains four stages: two
+fetch stages, a decode stage, and an execute stage. For each stage, parameter
+specifications are provided to tune pipeline behavior so that it resembles an
+Armv8-A implementation. Similar specifications are provided for branch
+prediction, specialized functional units, level 1 instruction and data caches,
+the TLB, and L2 cache. The kit does not provide specifications for L3 cache,
+which is optional in Cortex-A76 systems\cite{armCompare}. This prior work is
+limited to a generic Armv8-A in-order architecture. This study instead implements
+an out-of-order Armv8-A model to better approximate the Cortex-A76\cite{armCortexA76Product}
+and provides validation results against physical hardware.
 
-There have been a few previous attempts to recreate Arm architecture in gem5 and 
-validate it against physical hardware. Butko et al. compared a simulated Arm 
-Cortex-A9 against a ST-Ericsson Nova A9500 dual core Arm Cortex-A9 processor
-\cite{Butko2012-vg}. This study compares the simulated 2 core CPU to the 
-physical device in 11 benchmarks with various execution profiles from multiple 
-domains. The runtime of the benchmarks varied between 0.47 and 17.94 percent 
-between the real system and the simulated system with a mean of 6.4 percent. The 
-paper looks deeper into dense matrix operations and notes that gem5 struggles to 
-accurately simulate L2 cache misses, over reporting misses, and the DDR memory 
-system provided by gem5 is not an accurate representation of the system they 
-use. Our paper conducts a similar study for the Arm Cortex-A76 with a few key 
-differences. We look at additional performance counters beyond execution time 
-and L2 cache misses Additionally, we implement an out of order CPU model to more 
-faithfully adapt the CPU to the Arm Cortex-A76 pipeline.
+There have been previous attempts to recreate Arm architectures in gem5 and
+validate them against physical hardware. Butko et al. compared a simulated Arm
+Cortex-A9 against an ST-Ericsson Nova A9500 dual-core Arm Cortex-A9 processor
+\cite{Butko2012-vg}. Their study compared the simulated two-core CPU to the
+physical device across 11 benchmarks with varied execution profiles. Benchmark
+runtime differed by 0.47 to 17.94 percent between the real and simulated systems,
+with a mean difference of 6.4 percent. The paper also examined dense matrix
+operations and noted that gem5 struggled to accurately simulate L2 cache misses,
+overreported misses, and used a DDR memory model that did not accurately
+represent the tested system. This paper conducts a similar study for the Arm
+Cortex-A76 with two key differences. First, it examines additional performance
+counters beyond execution time and L2 cache misses. Second, it implements an
+out-of-order CPU model to better match the Cortex-A76 pipeline.
 
-In another study, Endo Et Al. simulate the Arm Cortex-A8 and Cortex-A9 using an 
-in-order and out-of-order pipeline respectively \cite{Endo2014-ca}. For both 
-architectures, this was achieved by using the O3 CPU model, and for the A8, 
-modifying the dispatch order and disabling the register renaming stage of the 
-pipeline. The study collected as many available parameters of each CPU from Arm 
-technical mannuals as possible to configure the two simulated CPUs, but were 
-unable to find information about L1 cache buffer sizes, some branch predictor 
-parameters, TLB sizes, and instruction queue and register reordering buffer 
-sizes. The paper defines in detail all of the parameters it found as well as the 
-assumptions it had to make. This study tests its simulated CPUs against physical 
-Cortex-A8 and Coretex-A9s on a suite of 10 PARSEC 3.0 benchmarks using gem5s 
-\texttt{full-system} mode. They found their runtime results varied between 1 and 
-17 percent for the A9 and 2 to 16 percent on the A8. The authors attributed the 
-majority of their errors to the general purpose nature of the gem5 architecture 
-and the reliance on inserting default parameters where they were unknown. Our 
-study seeks to contribute similar work to this study but for the Arm Cortex-A76. 
-To our knowledge, this will also be the first study modeling a 64 bit Arm Cortex 
-CPU modeled using gem5. We also want to investigate performnace counters beyond 
-those discussed in this paper. This paper focused on runtime and data movement 
-between VFS/NEON processors and the ARM pipeline, while we hope to include more 
-cache statistics as well. 
+In another study, Endo et al. simulated the Arm Cortex-A8 and Cortex-A9 using
+in-order and out-of-order pipelines, respectively\cite{Endo2014-ca}. Both
+architectures were modeled using the O3 CPU model; for the A8, the dispatch order
+was modified and the register renaming stage was disabled. The study collected as
+many available parameters as possible from Arm technical manuals, but the authors
+were unable to find information about L1 cache buffer sizes, some branch
+predictor parameters, TLB sizes, instruction queue sizes, and reorder buffer
+sizes. The paper clearly defines the parameters it found and the assumptions it
+made. The simulated CPUs were compared against physical Cortex-A8 and Cortex-A9
+systems using 10 PARSEC 3.0 benchmarks in gem5's \texttt{full-system} mode. The
+authors found runtime differences of 1 to 17 percent for the A9 and 2 to 16
+percent for the A8. They attributed most of the error to the general-purpose
+nature of gem5 and the need to use default parameters where implementation
+specific values were unknown. This study contributes similar work for the Arm
+Cortex-A76 and investigates performance counters beyond runtime. While the prior
+paper focused on runtime and data movement between VFP/NEON processors and the
+Arm pipeline, this study also includes cache statistics and branch behavior.
 
-There have been attempts to model specific parts of the Arm Cortex-A76. In 
-particular, Schluter Et Al. use side channels gleamed during benchmarks to 
-analyze the characteristics of hardware prefetches\cite{FetchBench}. Through experimentation, 
-characteristics of 19 different ARM and X86-64 CPUs were identified. Among these 
-CPUs was the ARM Cortex A76. Arm does not provide explicit details about the 
-characteristics of the Arm Cortex-A76 in the Technical Reference Manual
-\cite{armCortexA76Product}. They provide details about preload instructions 
-supported on the architecture and state that the load-store unit contains a 
-prefetcher responsible for both L1 and L2. However, no further details are 
-provided about the characteristics underlying the hardware prefetcher. To bypass 
-withheld prefetching information, Shluter Et Al. presents FetchBench, a suite of 
-benchmarks with distinct memory access patterns. Each test case is characterized 
-on a given processors and compared against known expected behaviors of common 
-prefetching algorithms. 
-
+There have also been attempts to model specific parts of the Arm Cortex-A76. In
+particular, Schluter et al. used side channels observed during benchmarks to
+analyze hardware prefetcher characteristics\cite{FetchBench}. Through
+experimentation, they identified characteristics of 19 different Arm and x86-64
+CPUs, including the Arm Cortex-A76. Arm does not provide explicit details about
+the Cortex-A76 hardware prefetcher in the Technical Reference Manual
+\cite{armCortexA76Product}. The manual describes supported preload instructions
+and states that the load-store unit contains a prefetcher responsible for both
+L1 and L2, but it does not provide the underlying prefetcher design. To infer
+this withheld information, Schluter et al. present FetchBench, a benchmark suite
+with distinct memory access patterns. Each test case is characterized on a given
+processor and compared against the expected behavior of common prefetching
+algorithms.
 
 \section{Methodology}
 
-This study evaluates how closely a gem5 recreation of the Arm Cortex A76 can 
-approximate the behavior of the Raspberry Pi 5 CPU. The target reference 
-platform is the Raspberry Pi, which uses the Broadcom BCM2712 SoC, containing 
-four Arm Cortex-A76 cores. The goal of the model is construct a reproducible 
-approximation of the CPU, cache hierarchy, and memory subsystem to capture 
-behavior as close to the physical CPU as possible. Using this approximation, we 
-intend to quantify where the recreation is able to reproduce behavior and where 
-the gem5 architecture falls short.
+This study evaluates how closely a gem5 recreation of the Arm Cortex-A76 can
+approximate the behavior of the Raspberry Pi 5 CPU. The target reference platform
+is the Raspberry Pi 5, which uses the Broadcom BCM2712 SoC containing four Arm
+Cortex-A76 cores. The goal of the model is to construct a reproducible
+approximation of the CPU, cache hierarchy, and memory subsystem that captures
+behavior as close to the physical CPU as possible. Using this approximation, the
+study quantifies where the recreation reproduces hardware behavior and where the
+gem5 model diverges.
 
 \subsection{Reference Platform}
 
-The reference hardware used in this study was an 8 GB Raspberry Pi 5 based on 
-the Broadcom BCM2712 SoC. The BCM2712 includes four Arm Cortex-A76 cores and 
-LPDDR4X memory. This platform represents a modern embedded Arm system with an 
-out-of-order Cortex-A profile processor. It contains a 13 stage pipeline, 2 
-simple ALUs one multi cycle ALU, one branch unit, two 128-bit ASIMD/FP pipelines
-and two load/store units\cite{CortexOptimizationGuide}. By comparison, the gem5
-O3 CPU is based on the Alpha 21264, which has a 7 stage out-of-order execution 
-model\cite{584667}.
+The reference hardware used in this study was an 8 GB Raspberry Pi 5 based on
+the Broadcom BCM2712 SoC. The BCM2712 includes four Arm Cortex-A76 cores and
+LPDDR4X memory. This platform represents a modern embedded Arm system with an
+out-of-order Cortex-A profile processor. The Cortex-A76 contains a 13-stage
+pipeline, two simple ALUs, one multi-cycle ALU, one branch unit, two 128-bit
+ASIMD/FP pipelines, and two load/store units\cite{CortexOptimizationGuide}. By
+comparison, the gem5 O3 CPU is based on the Alpha 21264, which has a seven-stage
+out-of-order execution model\cite{584667}.
 
-For hardware measurements, the Raspberry pi 5 was configured to reduce 
-experimental noise where possible. The CPU frequency was fixed at 2400 MHz so 
-that the hardware could be compared against a simulated processor running at 
-the same nominal frequency. Background services were minimized where possible. 
+For hardware measurements, the Raspberry Pi 5 was configured to reduce
+experimental noise where possible. The CPU frequency was fixed at 2400 MHz so
+that the hardware could be compared against a simulated processor running at the
+same nominal frequency. Background services were minimized where possible.
 
 \subsection{Simulation Scope}
 
-Our gem5 model focused on the CPU system rather than the full Raspberry Pi 5 
-system-on-chip as a whole. Specifically, the simulation attempted to approximate 
-the Cortex-A76 cores, private L1 instruction and data caches, shared L2 cache, 
-L3 cache, system memory, and TLB behavior.
+The gem5 model focuses on the CPU system rather than the full Raspberry Pi 5
+system-on-chip. Specifically, the simulation attempts to approximate the
+Cortex-A76 cores, private L1 instruction and data caches, shared L2 cache, L3
+cache, system memory, and TLB behavior.
 
 \subsection{Model Construction and Parameter Selection}
 
-The simulated architectural was construction using the \texttt{ArmO3CPU} model.
-Progression towards constructing accurate model of the ARM Cortex-A76 proceeded 
-in stages. The first iteration of the \texttt{ArmO3CPU} was based in large part 
-off of gem5 default values. Iteration one consisted of four out-of-order CPUs, 
-3 levels of the same size as the Cortex A-76, and generic values for all other 
-parameters. This iteration served as a baseline for all subsequent changes 
-towards creating a more accurate representation.
+The simulated architecture was constructed using the \texttt{ArmO3CPU} model.
+Progress toward an accurate model of the Arm Cortex-A76 proceeded in stages. The
+first iteration of the \texttt{ArmO3CPU} was based largely on gem5 default
+values. Iteration 1 consisted of four out-of-order CPUs, three cache levels sized
+to match the Cortex-A76-based Raspberry Pi 5 platform, and generic values for all
+other parameters. This iteration served as a baseline for all subsequent changes.
 
-The following iteration of the simulated CPU was gradually tuned using publicly 
-available documentation and justified approximations. Parameters were selected 
+The second iteration of the simulated CPU was gradually tuned using publicly
+available documentation and justified approximations. Parameters were selected
 using the following priority order:
 
 \begin{enumerate}
   \item Public Arm Cortex-A76 documentation and technical reference material \cite{armCortexA76Product,CortexOptimizationGuide}
   \item Public Arm A-profile architecture documentation and technical reference material \cite{arm-a-documentation}
   \item Raspberry Pi 5 and BCM2712 documentation where available
-  \item Prior gem5 and arm simulation studies.
-  \item Additional online resources or studies relating to the Arm Cortex-A76
-  \item gem5 defaults or explicitly documented approximations when no public implementation-specific value is available
+  \item Prior gem5 and Arm simulation studies
+  \item Additional online resources or studies related to the Arm Cortex-A76
+  \item gem5 defaults or explicitly documented approximations when no public implementation-specific value was available
 \end{enumerate}
 
-Because many commercial microarchitectural parameters are not publicly disclosed, 
-several values required approximation. These assumptions are documented in 
-Table~\ref{tab:model_parameters}. This table is intended to make the resulting 
-model reproducible and to distinguish between parameters derived from public 
+Because many commercial microarchitectural parameters are not publicly disclosed,
+several values required approximation. These assumptions are documented in
+Table~\ref{tab:model_parameters}. The table is intended to make the model
+reproducible and to distinguish between parameters derived from public
 documentation and parameters selected by approximation.
 
 \begin{table}[htbp]
@@ -273,101 +262,98 @@ Memory & DRAM model & DDR4-2400 4x16 & \cite{Raspberry_Pi_5_2026} & Closest gem5
 \end{table}
 
 
+
 \section{Benchmark Suite}
 
-Three benchmarks were selected: breadth-first search (BFS), general 
-matrix multiplication (GEMM), and the fast Fourier transform (FFT). These 
-workloads were chosen to represent different computational and memory access 
-patterns that are important for embedded and edge devices. The justification for 
-the relevance of each algorithm comes from the categories discussed in 
-\textit{The Landscape of Parallel Computing Research: A View from Berkeley}
-\cite{berkley-view}. This paper identifies graph traversal, dense linear 
-algebra, and spectral methods as important computational patterns relevant to 
-edge computing.
+Three benchmarks were selected: breadth-first search (BFS), general matrix
+multiplication (GEMM), and the fast Fourier transform (FFT). These workloads were
+chosen to represent different computational and memory access patterns that are
+important for embedded and edge devices. The justification for each algorithm
+comes from the categories discussed in \textit{The Landscape of Parallel
+Computing Research: A View from Berkeley}\cite{berkley-view}. That paper
+identifies graph traversal, dense linear algebra, and spectral methods as
+important computational patterns.
 
 \subsection{Breadth-First Search}
 
-BFS represents an irregular graph traversal workload. Its computational complexity 
-is commonly expressed as \(O(V + E)\) where \(V\) is the number of vertices and 
-\(E\) is the number of edges. BFS is typically more memory bound than compute 
-bound. Further, its performance is heavily dependent on the regularity of the 
-graph structure. Our implementation of BFS uses the GraphBLAS library: an open 
-source graph library build upon linear algebra operations\cite{GraphBLAS}. In 
-this case, the BFS subroutine is build upon sparse matrix operations.
+BFS represents an irregular graph traversal workload. Its computational
+complexity is commonly expressed as \(O(V + E)\), where \(V\) is the number of
+vertices and \(E\) is the number of edges. BFS is typically more memory-bound
+than compute-bound, and its performance depends heavily on the regularity of the
+graph structure. This study uses the GraphBLAS library, an open-source graph
+library built on linear algebra operations\cite{GraphBLAS}. In this case, the
+BFS subroutine is implemented using sparse matrix operations.
 
 \subsection{General Matrix Multiplication}
 
-GEMM is a dense linear algebra operation that has a computational complexity of 
-\(O(N^3)\) for square matrices. GEMM has a regular memory access pattern and 
-high arithmetic intensity when implemented efficiency. This makes GEMM 
-the most computationally bound algorithm of the three tested. Our implementation 
-used the OpenBLAS library, an optimized Basic Linear Algebra Subprograms 
-library.
+GEMM is a dense linear algebra operation with computational complexity \(O(N^3)\)
+for square matrices. GEMM has a regular memory access pattern and high arithmetic
+intensity when implemented efficiently. This makes GEMM the most
+compute-bound algorithm of the three tested. This study uses OpenBLAS, an
+optimized Basic Linear Algebra Subprograms library.
 
 \subsection{Fast Fourier Transform}
 
-The FFT is a spectral method. For an input of size \(N\), the computational 
-complexity is \(O(N \log N)\). FFT has a more structured access pattern than BFS 
-but is less straightforward that GEMM. Depending on the implementation, the FFT 
-may involve strided memory access, butterfly operations, bit-reversal 
-permutations, and varying locality across stages. Our implementation uses the 
-FFTW library: a highly tuned CPU implementation of the FFT.
+The FFT is a spectral method. For an input of size \(N\), its computational
+complexity is \(O(N \log N)\). FFT has a more structured access pattern than BFS
+but is less straightforward than GEMM. Depending on the implementation, the FFT
+may involve strided memory access, butterfly operations, bit-reversal
+permutations, and varying locality across stages. This study uses FFTW, a highly
+tuned CPU implementation of the FFT.
 
 \section{Experimental Design}
 
-Each benchmark was executed under a sweep of problem sizes. GEMM and FFT were 
-additionally tested under varying thread counts. BFS was unable to complete 
-execution when run in parallel. Problem size was varied to observe how the model 
-accuracy scales with size of the computation, which has effects on the memory 
-access patterns and cache stress. Thread count was varied to evaluate multicore 
-scaling behavior and cache coherency accuracy. 
+Each benchmark was executed under a sweep of problem sizes. GEMM and FFT were
+also tested with varying thread counts. BFS was unable to complete execution when
+run in parallel, so only single-threaded BFS results are reported. Problem size
+was varied to observe how model accuracy changes with computation size, memory
+access behavior, and cache pressure. Thread count was varied to evaluate
+multicore scaling behavior and cache coherence accuracy.
 
-For each workload, the same benchmark source was compiled for execution on both 
-the Raspberry Pi 5 and gem5. All binaries were compiled statically, with 
-compiler optimization and vectorization enabled where relevant. All parallel 
-code was compiled using OpenMP.
+For each workload, the same benchmark source was compiled for execution on both
+the Raspberry Pi 5 and gem5. All binaries were compiled statically, with compiler
+optimization and vectorization enabled where relevant. All parallel code was
+compiled using OpenMP.
 
 \subsection{Measurement Collection}
 
-The primary comparison metric was benchmark runtime. Runtime was selected since 
-it is a general indicator of performance is commonly used in prior 
-simulation validation studies \cite{Butko2012-vg,Endo2014-ca}.
+The primary comparison metric was benchmark runtime. Runtime was selected because
+it is a general indicator of performance and is commonly used in prior simulation
+validation studies\cite{Butko2012-vg,Endo2014-ca}.
 
-Additional architectural statistics were collected to explain performance 
-differences and determine where the gem5 simulation does not yet match the 
-true Cortex-A76 implementation. These statistics include IPC, Branch Miss Rate, 
-L1 Data Miss Rate, and L2 Data Miss Rate. In gem5, statistics were collected 
-directly from the simulators output. On physical hardware, comparable 
-comparable measurements were collected using Linux \texttt{perf}. 
+Additional architectural statistics were collected to explain performance
+differences and determine where the gem5 simulation does not yet match the true
+Cortex-A76 implementation. These statistics include IPC, branch miss rate, L1
+data miss rate, and L2 data miss rate. In gem5, statistics were collected
+directly from the simulator output. On physical hardware, comparable measurements
+were collected using Linux \texttt{perf}.
 
 \subsection{Changes from Original Proposal}
 
-The final implementation followed to original proposal closely with two 
-deviations. First, the final model used gem5 \texttt{system-call emulation} 
-rather than \texttt{full-system} mode. This has concequences for the final 
-compiled binaries. OpenBLAS made the systemcall \textit{mbind}, which is 
-unimplemented in \texttt{system-call emulation} mode. OpenBLAS also attempted 
-to access the \textit{cntvct\_el0} and \textit{cntfrq\_el0} registers which are 
-not available in in \texttt{system-call emulation} mode. Second, the first two 
-proposed milestones---producing a baseline Arm CPU and configuring an 
-out-of-order Arm CPU---were combined into a single CPU iteration.
+The final implementation followed the original proposal closely, with two main
+deviations. First, the final model used gem5 \texttt{system-call emulation}
+rather than \texttt{full-system} mode. This affected the final compiled binaries.
+OpenBLAS made the \textit{mbind} system call, which is unimplemented in
+\texttt{system-call emulation} mode. OpenBLAS also attempted to access the
+\textit{cntvct\_el0} and \textit{cntfrq\_el0} registers, which are not available
+in \texttt{system-call emulation} mode. Second, the first two proposed
+milestones---producing a baseline Arm CPU and configuring an out-of-order Arm
+CPU---were combined into a single CPU iteration.
 
-Therefore, the final methodology consists of three major stages: 
+Therefore, the final methodology consists of three major stages:
 
 \begin{enumerate}
   \item Construct a runnable Arm gem5 model using the \texttt{O3} CPU model.
-  \item Tune CPU, cache, memory, TLB, and related parameters using public 
-  documentation and justified approximations.
-  \item Evaluate the model against Raspberry Pi 5 hardware using BFS, GEMM, and 
-  FFT across varying problem sizes and thread counts.
+  \item Tune CPU, cache, memory, TLB, and related parameters using public documentation and justified approximations.
+  \item Evaluate the model against Raspberry Pi 5 hardware using BFS, GEMM, and FFT across varying problem sizes and thread counts.
 \end{enumerate}
 
 \section{Results}
 
-This section covers runtime results and statistics for all three benchmarks. 
-Iteration 1 results represent the baseline \texttt{ArmO3CPU} with few 
-modifications. Iteration 2 results represent the tuned CPU implementation 
-as described in Table~\ref{tab:model_parameters}. 
+This section presents runtime results and architectural statistics for all three
+benchmarks. Iteration 1 represents the baseline \texttt{ArmO3CPU} model with few
+modifications. Iteration 2 represents the tuned CPU implementation described in
+Table~\ref{tab:model_parameters}.
 
 
 
@@ -409,49 +395,79 @@ Algorithm & Problem size & \multicolumn{3}{c}{t=1} & \multicolumn{3}{c}{t=2} & \
 \end{tabular}
 \end{table}
 
-This trial was ultimately unsuccessful in producing a meaningful recreation of 
-the Arm Cortex-A76 CPU architecture. Across benchmarks, the second iteration, 
-which contained the fine tuned parameters, performed less similar to physical 
-hardware compared to the baseline iteration 1 with the exception of breadth 
-first search with one thread. Across all tests, problem sizes, and thread 
-counts, iteration 1 performed on average within 16.8\% of the physical Arm 
-Cortex-A76. However, the fine tuned iteration 2 performed on average within 
-52.6\% of physical hardware. 
+The tuned model was ultimately unsuccessful in producing a consistently more
+accurate recreation of the Arm Cortex-A76 CPU architecture. Across benchmarks,
+Iteration 2, which contained the tuned parameters, was less similar to physical
+hardware than the baseline Iteration 1, with the exception of single-threaded
+BFS. Across all tests, problem sizes, and thread counts, Iteration 1 differed
+from the physical Arm Cortex-A76 by an average of 16.8\%. In contrast, Iteration
+2 differed from physical hardware by an average of 52.6\%.
 
-It is also important to note that there is a larger difference in variance 
-between hardware and simulation based on algorithm rather than thread count. 
-Among all problem sizes, thread count, and implementation, FFT has an average 
-variance of 44.8\%, where GEMM has a 24.6\% variance. Compare that to the 
-difference in variance based on thread count: among FFT and GEMM, problem size, 
-and iteration, through counts 1 through 4 have variances of 40.0\%, 31.7\%, 32.3\%, 
-and 34.8\% respectively. The fact that the difference in variance is tighter 
-based on thread count compared to algorithm, combined with the fact that the 
-more data friendly algorithm performs closer to true hardware indicates that 
-the limiting factor is a discrepancy in the memory hierarchy.
+It is also important to note that the difference between hardware and simulation
+varied more by algorithm than by thread count. Across all problem sizes, thread
+counts, and implementations, FFT had an average difference of 44.8\%, while GEMM
+had an average difference of 24.6\%. By comparison, when grouped by thread count
+for FFT and GEMM, thread counts 1 through 4 had average differences of 40.0\%,
+31.7\%, 32.3\%, and 34.8\%, respectively. The fact that error varied more by
+algorithm than by thread count suggests that workload-specific memory behavior
+was a larger source of mismatch than multicore scaling alone. The stronger GEMM
+results also support this interpretation, since GEMM has a more regular and
+cache-friendly access pattern than FFT or BFS.
 
-That said, there is no strong corelation between runtime difference and L1 data 
-miss rate. In fact, there is no strong trends among L1 miss rates between 
-algorithms, between problem sizes, nor between thread counts. This could be 
-attributed to perf and gem5 using different mechanisms for tracking miss rate, 
-and thus having no corelation between the two statistics. 
+That said, there was no strong correlation between runtime difference and L1 data
+miss rate. In fact, no strong trends appeared in L1 miss rate across algorithms,
+problem sizes, or thread counts. This may be due to differences between how
+\texttt{perf} and gem5 define and collect cache miss statistics. As a result, the
+L1 data miss rate measurements are useful as supporting evidence but should not
+be treated as directly interchangeable between hardware and simulation.
 
-One anecdote that should be considered is that throughout much of the development 
-of the second CPU iteration, had performance that was closer to true hardware compared to 
-the baseline iteration. Towards the end of experimentation, cache latency values were 
-found which caused the first set of results in which the performance of iteration 2 
-was consistently further from true values. 
+One important observation from development is that, for much of the tuning
+process, the second CPU iteration performed closer to hardware than the baseline
+iteration. Near the end of experimentation, cache latency values were introduced
+that produced the first results in which Iteration 2 was consistently farther
+from hardware. This suggests that the model is sensitive to cache and memory
+latency assumptions and that the final parameter set should not be interpreted as
+a definitive tuned Cortex-A76 model.
 
-Another limiting factor of the study is the lack of public information about the 
-branch predictor present in the Arm Cortex-A76. Because no information was available, 
-the predictor was left as default. As a consequence the average difference between
-the hardware branch miss rate and simulated branch miss rates is 618\% variance.
+Another limiting factor is the lack of public information about the Arm
+Cortex-A76 branch predictor. Because implementation-specific branch predictor
+information was unavailable, the predictor was left at its gem5 default. As a
+consequence, the average difference between the hardware branch miss rate and the
+simulated branch miss rate was 618\%. This large mismatch indicates that branch
+prediction is likely another major source of model error.
 
+\section{Conclusion}
+This study set out to evaluate whether gem5 could be used to construct a useful
+approximation of the Raspberry Pi 5's Broadcom BCM2712 CPU subsystem. A baseline
+Arm \texttt{O3} model and a second tuned model were constructed and compared
+against physical Raspberry Pi 5 hardware using BFS, GEMM, and FFT. The results
+show that the baseline model often tracked hardware runtime more closely than the
+tuned model, while the tuned model improved some single-threaded BFS results but
+introduced larger errors across FFT and GEMM.
 
+The main conclusion is that matching individual public Cortex-A76 parameters does
+not automatically produce a more accurate full-system performance model. The
+final tuned model was highly sensitive to cache latency, memory hierarchy, and
+branch prediction assumptions. These components are also among the least publicly
+documented parts of the Cortex-A76 implementation. As a result, the validation
+results suggest that gem5 can provide a useful experimental framework for
+studying broad performance trends, but that a Cortex-A76 model should be
+validated iteratively against hardware rather than assumed correct after parameter
+matching.
 
+Future work should focus on isolating the source of the mismatch more carefully.
+A useful next step would be to tune one subsystem at a time, beginning with cache
+and memory latency, then evaluating branch prediction and prefetching separately.
+Additional microbenchmarks designed to stress one architectural feature at a time
+would make it easier to distinguish between CPU pipeline error, cache hierarchy
+error, DRAM modeling error, and library or system-call-emulation artifacts.
+Moving selected experiments to gem5 \texttt{full-system} mode may also reduce
+some of the limitations introduced by \texttt{system-call emulation}. Overall,
+this work establishes a reproducible starting point for BCM2712 modeling and
+shows that validation against physical hardware is essential when using gem5 for
+architecture studies.
 
-
-
-\bibliographystyle{ACM-Reference-Format} % tried to use alpha, did not work?? 
+\bibliographystyle{ACM-Reference-Format}
 \bibliography{sample-base}
 
 \end{document}
