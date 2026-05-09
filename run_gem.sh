@@ -79,6 +79,13 @@ for threads in 1 2 3 4; do
     done
 done
 
+for threads in 1; do
+    for n in 512 1024 2048 4096 8192; do 
+        wait_for_slot
+        run_test "BFS" "binaries/BFS/bfs-arm" "-l" "$n" "$threads" &
+    done
+done
+
 wait
 
 echo "All queued runs completed."

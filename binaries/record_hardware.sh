@@ -11,31 +11,45 @@ EVENT_GROUPS=(
 
 mkdir -p ./FFT/stats/hardware
 mkdir -p ./GEMM/stats/hardware
+mkdir -p ./BFS/stats/hardware
 
 iterations=10
 
-for size in 128 256 512 1024 2048 4096 8192; do
-    for t in 1 2 3 4; do
-        for i in "${!EVENT_GROUPS[@]}"; do
-            mkdir -p ./FFT/stats/hardware/"$size"/"t${t}"
-            perf stat -x, -o "FFT/stats/hardware/${size}/t${t}/group${i}.csv" -r 5 \
-            -e task-clock,duration_time,user_time,system_time \
-            -e "${EVENT_GROUPS[$i]}" \
-            -- ./FFT/fft-arm -n "$t" -f "$size" -i "$iterations"
-        done
-        ./FFT/fft-arm -n "$t" -f "$size" -i "$iterations" > "FFT/stats/hardware/${size}/t${t}/runtime.txt"
-    done
-done
+# for size in 128 256 512 1024 2048 4096 8192; do
+#     for t in 1 2 3 4; do
+#         for i in "${!EVENT_GROUPS[@]}"; do
+#             mkdir -p ./FFT/stats/hardware/"$size"/"t${t}"
+#             perf stat -x, -o "FFT/stats/hardware/${size}/t${t}/group${i}.csv" -r 5 \
+#             -e task-clock,duration_time,user_time,system_time \
+#             -e "${EVENT_GROUPS[$i]}" \
+#             -- ./FFT/fft-arm -n "$t" -f "$size" -i "$iterations"
+#         done
+#         ./FFT/fft-arm -n "$t" -f "$size" -i "$iterations" > "FFT/stats/hardware/${size}/t${t}/runtime.txt"
+#     done
+# done
 
-for size in 64 128 256 512 1024; do
-    for t in 1 2 3 4; do
+# for size in 64 128 256 512 1024; do
+#     for t in 1 2 3 4; do
+#         for i in "${!EVENT_GROUPS[@]}"; do
+#             mkdir -p ./GEMM/stats/hardware/"$size"/"t${t}"
+#             perf stat -x, -o "GEMM/stats/hardware/${size}/t${t}/group${i}.csv" -r 5 \
+#             -e task-clock,duration_time,user_time,system_time \
+#             -e "${EVENT_GROUPS[$i]}" \
+#             -- ./GEMM/gemm-arm -n "$t" -l "$size" -i "$iterations"
+#         done
+#         ./GEMM/gemm-arm -n "$t" -l "$size" -i "$iterations" > "GEMM/stats/hardware/${size}/t${t}/runtime.txt"
+#     done
+# done
+
+for size in 512 1024 2048 4096 8192 16384; do 
+    for t in 1; do
         for i in "${!EVENT_GROUPS[@]}"; do
-            mkdir -p ./GEMM/stats/hardware/"$size"/"t${t}"
-            perf stat -x, -o "GEMM/stats/hardware/${size}/t${t}/group${i}.csv" -r 5 \
+            mkdir -p ./BFS/stats/hardware/"$size"/"t${t}"
+            perf stat -x, -o "BFS/stats/hardware/${size}/t${t}/group${i}.csv" -r 5 \
             -e task-clock,duration_time,user_time,system_time \
             -e "${EVENT_GROUPS[$i]}" \
-            -- ./GEMM/gemm-arm -n "$t" -l "$size" -i "$iterations"
+            -- ./BFS/bfs-arm -n "$t" -l "$size" -i "$iterations"
         done
-        ./GEMM/gemm-arm -n "$t" -l "$size" -i "$iterations" > "GEMM/stats/hardware/${size}/t${t}/runtime.txt"
+        ./BFS/bfs-arm -n "$t" -l "$size" -i "$iterations" > "BFS/stats/hardware/${size}/t${t}/runtime.txt"
     done
 done
