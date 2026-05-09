@@ -4,7 +4,7 @@
 
 
 
-python3 plot_combined_stats.py round3.csv \
+python3 plot_combined_stats.py i1_i2_comparison.csv \
     --algorithm GEMM \
     --run hardware \
     --run gem5:i1 \
@@ -15,7 +15,7 @@ python3 plot_combined_stats.py round3.csv \
     --series run \
     --output gemm_runtime_compare_t1.png
 
-python3 plot_combined_stats.py round3.csv \
+python3 plot_combined_stats.py i1_i2_comparison.csv \
     --algorithm FFT \
     --run hardware \
     --run gem5:i1 \
@@ -26,7 +26,7 @@ python3 plot_combined_stats.py round3.csv \
     --series run \
     --output fft_runtime_compare_t1.png
 
-python3 plot_combined_stats.py round3.csv \
+python3 plot_combined_stats.py i1_i2_comparison.csv \
     --algorithm BFS \
     --run hardware \
     --run gem5:i1 \
@@ -38,7 +38,7 @@ python3 plot_combined_stats.py round3.csv \
     --output bfs_runtime_compare_t1.png
 
 
-python3 plot_combined_stats.py round3.csv \
+python3 plot_combined_stats.py i1_i2_comparison.csv \
     --algorithm GEMM \
     --run hardware \
     --run gem5:i1 \
@@ -49,7 +49,7 @@ python3 plot_combined_stats.py round3.csv \
     --series run \
     --output gemm_runtime_compare_t2.png
 
-python3 plot_combined_stats.py round3.csv \
+python3 plot_combined_stats.py i1_i2_comparison.csv \
     --algorithm FFT \
     --run hardware \
     --run gem5:i1 \
@@ -61,7 +61,7 @@ python3 plot_combined_stats.py round3.csv \
     --output fft_runtime_compare_t2.png
 
 
-python3 plot_combined_stats.py round3.csv \
+python3 plot_combined_stats.py i1_i2_comparison.csv \
     --algorithm GEMM \
     --run hardware \
     --run gem5:i1 \
@@ -72,7 +72,7 @@ python3 plot_combined_stats.py round3.csv \
     --series run \
     --output gemm_runtime_compare_t3.png
 
-python3 plot_combined_stats.py round3.csv \
+python3 plot_combined_stats.py i1_i2_comparison.csv \
     --algorithm FFT \
     --run hardware \
     --run gem5:i1 \
@@ -83,7 +83,7 @@ python3 plot_combined_stats.py round3.csv \
     --series run \
     --output fft_runtime_compare_t3.png
 
-python3 plot_combined_stats.py round3.csv \
+python3 plot_combined_stats.py i1_i2_comparison.csv \
     --algorithm GEMM \
     --run hardware \
     --run gem5:i1 \
@@ -94,7 +94,7 @@ python3 plot_combined_stats.py round3.csv \
     --series run \
     --output gemm_runtime_compare_t4.png
 
-python3 plot_combined_stats.py round3.csv \
+python3 plot_combined_stats.py i1_i2_comparison.csv \
     --algorithm FFT \
     --run hardware \
     --run gem5:i1 \
